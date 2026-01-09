@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>トランシーバー</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
 body {
   font-family: sans-serif;
@@ -12,6 +13,7 @@ body {
 button {
   font-size: 24px;
   padding: 20px 40px;
+  touch-action: manipulation;
 }
 </style>
 </head>
@@ -19,30 +21,53 @@ button {
 
 <h1>押して話す</h1>
 <button id="talk">🎤 押して話す</button>
+<p id="status">待機中</p>
 
 <script>
 let audioCtx;
 let mic;
-let processor;
+let gain;
 
 const btn = document.getElementById("talk");
+const status = document.getElementById("status");
 
-btn.onmousedown = start;
-btn.ontouchstart = start;
-btn.onmouseup = stop;
-btn.ontouchend = stop;
+// 押した瞬間
+btn.addEventListener("touchstart", start, { passive:false });
+btn.addEventListener("mousedown", start);
 
-async function start() {
-  audioCtx = new AudioContext();
+// 離した瞬間
+btn.addEventListener("touchend", stop);
+btn.addEventListener("mouseup", stop);
+
+async function start(e) {
+  e.preventDefault();
+
+  status.textContent = "マイクON";
+
+  if (!audioCtx) {
+    audioCtx = new AudioContext();
+  }
+
+  // スマホは明示的にresume必須
+  await audioCtx.resume();
+
   const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
   mic = audioCtx.createMediaStreamSource(stream);
-  processor = audioCtx.createScriptProcessor(1024, 1, 1);
-  mic.connect(processor);
-  processor.connect(audioCtx.destination);
+  gain = audioCtx.createGain();
+  gain.gain.value = 1.0;
+
+  mic.connect(gain);
+  gain.connect(audioCtx.destination);
 }
 
 function stop() {
-  if (audioCtx) audioCtx.close();
+  status.textContent = "待機中";
+
+  if (audioCtx) {
+    audioCtx.close();
+    audioCtx = null;
+  }
 }
 </script>
 
