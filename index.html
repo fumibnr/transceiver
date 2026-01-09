@@ -26,24 +26,35 @@ button {
 const btn = document.getElementById("talk");
 const status = document.getElementById("status");
 
-let audio;
+let audioCtx;
+let mic;
+let gainNode;
 let stream;
+let on = false;
 
 btn.onclick = async () => {
-  if (!audio) {
+  if (!on) {
     status.textContent = "マイクON";
+    on = true;
+
+    audioCtx = new AudioContext();
+    await audioCtx.resume();
 
     stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    mic = audioCtx.createMediaStreamSource(stream);
 
-    audio = new Audio();
-    audio.srcObject = stream;
-    audio.autoplay = true;
+    gainNode = audioCtx.createGain();
+    gainNode.gain.value = 4.0; // ← 音量ブースト（重要）
+
+    mic.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+
   } else {
     status.textContent = "待機中";
+    on = false;
 
     stream.getTracks().forEach(t => t.stop());
-    audio = null;
-    stream = null;
+    audioCtx.close();
   }
 };
 </script>
