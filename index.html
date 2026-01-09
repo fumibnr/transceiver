@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>トランシーバー</title>
+<style>
+body {
+  font-family: sans-serif;
+  text-align: center;
+  padding: 30px;
+}
+button {
+  font-size: 24px;
+  padding: 20px 40px;
+}
+</style>
+</head>
+<body>
+
+<h1>押して話す</h1>
+<button id="talk">🎤 押して話す</button>
+
+<script>
+let audioCtx;
+let mic;
+let processor;
+
+const btn = document.getElementById("talk");
+
+btn.onmousedown = start;
+btn.ontouchstart = start;
+btn.onmouseup = stop;
+btn.ontouchend = stop;
+
+async function start() {
+  audioCtx = new AudioContext();
+  const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  mic = audioCtx.createMediaStreamSource(stream);
+  processor = audioCtx.createScriptProcessor(1024, 1, 1);
+  mic.connect(processor);
+  processor.connect(audioCtx.destination);
+}
+
+function stop() {
+  if (audioCtx) audioCtx.close();
+}
+</script>
+
+</body>
+</html>
