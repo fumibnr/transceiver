@@ -2,26 +2,49 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
+<title>トランシーバー</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>テスト</title>
 <style>
+body {
+  font-family: sans-serif;
+  text-align: center;
+  padding: 30px;
+}
 button {
   font-size: 24px;
-  padding: 30px;
+  padding: 20px 40px;
 }
 </style>
 </head>
 <body>
 
-<button id="btn">押して</button>
-<p id="txt">未反応</p>
+<h1>押して話す</h1>
+<button id="talk">🎤 押して話す</button>
+<p id="status">待機中</p>
 
 <script>
-const btn = document.getElementById("btn");
-const txt = document.getElementById("txt");
+const btn = document.getElementById("talk");
+const status = document.getElementById("status");
 
-btn.onclick = () => {
-  txt.textContent = "押された！！！";
+let audio;
+let stream;
+
+btn.onclick = async () => {
+  if (!audio) {
+    status.textContent = "マイクON";
+
+    stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+    audio = new Audio();
+    audio.srcObject = stream;
+    audio.autoplay = true;
+  } else {
+    status.textContent = "待機中";
+
+    stream.getTracks().forEach(t => t.stop());
+    audio = null;
+    stream = null;
+  }
 };
 </script>
 
